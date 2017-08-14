@@ -13,8 +13,6 @@ class GlassGrid {
         this.clickedPage = 1; //last_clicked_page_index;
         this.rowTemplateUrl = "/";
         this.rowTemplate = "";
-        this.onRowDataBind = function() {};
-        this.onPageChange = function() {};
     };
 
     /**properties */
@@ -99,16 +97,38 @@ class GlassGrid {
             _this.onNextClick(e.target.id);
         });
     }
+    onPageChangeCallback() {}
+
+    onPageChange(callback) {
+        this.onPageChangeCallback = callback;
+    }
+
+    appendRowTemplate() {
+        let gridBody = document.getElementsByClassName("grid-body")[0];
+        gridBody.innerHTML = "";
+        this.data.forEach((value, index) => {
+            gridBody.innerHTML += this.rowTemplate;
+        });
+
+    }
+
+    onRowDataBindCallback() {}
+
+    onRowDataBind(callback) {
+        this.onRowDataBindCallback = callback;
+    }
 
     onPageClick(clickedPage) {
         this.clickedPage = parseInt(clickedPage);
-        this.clearGridBody();
-        this.onPageChange().then(() => {
-            this.appendRowTemplate();
-            this.onRowDataBind();
-        });
-
-
+        this.onPageChangeCallback().then((data) => {
+                this.data = data;
+                return Promise.resolve(this.clearGridBody());
+            }).then(() => {
+                return Promise.resolve(this.appendRowTemplate());
+            })
+            .then(() => {
+                this.onRowDataBindCallback();
+            })
     }
 
     enablePreviousButton(hasPrevious) {
@@ -151,35 +171,29 @@ class GlassGrid {
 
     /**Grid Main */
     init() {
+        try {
+            this.createGridShell();
 
-        return new Promise((resolve, reject) => {
-            try {
-                this.createGridShell();
-
-                if (this.c < this.d) { //available page count is less then page_count_to_shown
-                    this.e = this.d - parseInt(this.c - this.d);
-                } else {
-                    this.e = this.d;
-                }
-
-                this.generatePaging(this.f, this.e);
-                this.enablePreviousButton(false);
-                this.e < this.c ? this.enableNextButton(true) : this.enableNextButton(false);
-
-                this.getRowTemplate().then((rowTemplate) => {
-                    this.rowTemplate = rowTemplate;
-                    this.appendRowTemplate();
-
-                    resolve();
-                })
-
-
-
-            } catch (err) {
-                reject(err);
+            if (this.c < this.d) { //available page count is less then page_count_to_shown
+                this.e = this.d - parseInt(this.c - this.d);
+            } else {
+                this.e = this.d;
             }
-        });
 
+            this.generatePaging(this.f, this.e);
+            this.enablePreviousButton(false);
+            this.e < this.c ? this.enableNextButton(true) : this.enableNextButton(false);
+
+            this.getRowTemplate().then((rowTemplate) => {
+                this.rowTemplate = rowTemplate;
+                return Promise.resolve(this.appendRowTemplate());
+            }).then(() => {
+                this.onRowDataBindCallback();
+            })
+
+        } catch (err) {
+            throw new Error(err);
+        }
 
     }
 
@@ -242,14 +256,6 @@ class GlassGrid {
 
     }
 
-    appendRowTemplate() {
-
-        let gridBody = document.getElementsByClassName("grid-body")[0];
-        gridBody.innerHTML = "";
-        this.data.forEach((value, index) => {
-            gridBody.innerHTML += this.rowTemplate;
-        });
-    }
 
     clearGridBody() {
         let gridBody = document.getElementsByClassName("grid-body")[0];

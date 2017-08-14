@@ -72,31 +72,29 @@
             ]).then((results) => {
                 myGrid.b = results[0].count;
                 myGrid.data = results[1];
-
-                myGrid.init().then(() => {
-                    bindRowData(myGrid.data);
-                });
+                myGrid.init();
 
             }).catch((error) => {
                 throw new Error(error);
             })
 
-            /*To Do: Not easy to implement by dev*/
-            myGrid.onPageChange = function() {
+            myGrid.onPageChange(function() {
                 return new Promise((resolve, reject) => {
                     getPersons(myGrid.clickedPage, 3).then((result) => {
-                        myGrid.data = result;
-                        resolve();
-                    }).catch((error) => {
-                        reject(error);
-                    });
+                            resolve(result);
+                        })
+                        .catch((error) => {
+                            throw new Error(error);
+                        });
                 })
 
-            };
+            });
 
-            myGrid.onRowDataBind = function() {
+            /*To Do: Not easy to implement by dev*/
+
+            myGrid.onRowDataBind(function() {
                 bindRowData();
-            };
+            });
 
             function bindRowData() {
                 let data = myGrid.data;
