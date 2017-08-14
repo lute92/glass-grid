@@ -1,0 +1,44 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymer/lib/elements/dom-repeat.html">
+
+<dom-module id="personal-records">
+    <template>
+        <table>
+        <thead>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Age</th>
+            <th></th>
+        </thead>
+        <tbody id="tbody">
+            <template is="dom-repeat" items="{{data}}">
+                <tr>
+                    <td>{{item.name}}</td>    
+                    <td>{{item.address}}</td>
+                    <td>{{item.age}}</td>
+                    <td><button on-click="onIsMarriedChange">{{item.isMarried}}</button></td>
+                </tr>
+            </template>
+    </tbody>
+    </table>
+
+    </template>
+
+    <script>
+        class PersonalRecords extends Polymer.Element {
+            constructor() {
+                super();
+                this.data = [];
+            }
+            static get is() {
+                return 'personal-records';
+            }
+
+            onIsMarriedChange(e) {
+                e.model.set('item.isMarried', !e.model.item.isMarried);
+            }
+        }
+
+        customElements.define(PersonalRecords.is, PersonalRecords);
+    </script>
+</dom-module>

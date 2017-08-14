@@ -1,0 +1,74 @@
+<html>
+
+<head>
+    <script src="./bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="/src/glass-grid.html">
+    <link rel="import" href="/src/row_template.html">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <div>
+        <glass-grid id="myGrid">
+
+        </glass-grid>
+    </div>
+    <script>
+        $(document).ready(function() {
+
+            function getAllPersons() {
+                return new Promise((resolve, reject) => {
+                    const _url = "http://localhost:4000/api/person/1/5"
+                    $.ajax({
+                        type: 'GET',
+                        url: _url,
+                        success: function(result) {
+                            resolve(result);
+                        },
+                        error: function(error) {
+                            reject(error);
+                        }
+                    });
+                });
+
+            }
+
+            function getPersonCount() {
+                return new Promise((resolve, reject) => {
+                    const _url = "http://localhost:4000/api/personCount"
+                    $.ajax({
+                        type: 'GET',
+                        url: _url,
+                        success: function(result) {
+                            resolve(result);
+                        },
+                        error: function(error) {
+                            reject(error);
+                        }
+                    });
+                })
+            }
+
+            Promise.all([
+                getAllPersons(),
+                getPersonCount()
+            ]).then((results) => {
+
+                var myCustomGrid = document.querySelector("#myGrid");
+                myCustomGrid.data = results[0];
+                myCustomGrid.a = 5; //a
+                myCustomGrid.b = results[1]; //b
+                myCustomGrid.d = 5; //d
+                myCustomGrid.rowElementTagName = "personal-records";
+                myCustomGrid.init();
+
+
+            }).catch((err) => {
+                throw new Error(err);
+            });
+
+        })
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Polymer Nested Custom Element: Name List</title>
+    <script src="components/platform/platform.js"></script>
+    <script src="components/polymer/polymer.js"></script>
+</head>
+
+<body>
+    <ts-names id="name-list"></ts-names>
+    <input type="text" placeholder="Enter a Name" id="name-input">
+    <button id="add-button"> Add</button>
+    <script>
+        var addButton = document.querySelector("#add-button"),
+            nameList = document.querySelector("#name-list");
+        addButton.addEventListener("click", function(e) {
+            var newName = document.querySelector("#name-input").value;
+            nameList.studentList.push({
+                name: newName
+            });
+        })
+    </script>
+
+    <polymer-element name="ts-red">
+
+        <template>
+<style>
+span {
+color:red;
+}
+</style>
+<span>{{intext}}</span>
+</template>
+        <script>
+            Polymer("ts-red", {
+                publish: {
+                    intext: ""
+                }
+            });
+        </script>
+    </polymer-element>
+
+    <polymer-element name="ts-names">
+        <template>
+<ol>
+<template repeat="{{student in studentList}}">
+<li><ts-red intext="{{student.name}}"></ts-red></li>
+</template>
+        </ol>
+        </template>
+        <script>
+            Polymer('ts-names', {
+                studentList: [{
+                    name: "Sandeep"
+                }, {
+                    name: "Surabhi"
+                }, {
+                    name: "Sangeeta"
+                }, {
+                    name: "Sumanta"
+                }]
+            });
+        </script>
+    </polymer-element>
+</body>
+
+</html>

@@ -1,0 +1,214 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+
+<dom-module id="glass-grid">
+    <template>
+        <div class="grid-container">
+            <div class="grid-header">
+                
+            </div>
+            <div id="grid-body">
+               
+            </div>
+            <div class="grid-footer">
+                    <div class="pages">
+                        <div class="previous-page">
+                            <a href="#" id="btnNext" on-click="onPreviousClick">
+                                <i class="fa fa-angle-left" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                        
+                        <dom-repeat class="paging-repeater" >
+                            <template is="dom-repeat" items="{{c}}">
+                                <div class="paging-button">
+                                    <a href="#" id="{{item}}">{{item}}</a>
+                                </div>
+                            </template>
+    </dom-repeat>
+
+    <div class="next-page">
+        <a href="#" id="btnPrevious" on-click="onNextClick">
+            <i class="fa fa-angle-right" aria-hidden="true"></i>
+        </a>
+    </div>
+    </div>
+    </div>
+    </div>
+    </template>
+    <script>
+        class GlassGrid extends Polymer.Element {
+
+            static get is() {
+                return "glass-grid";
+                this.currentPage = 0;
+            }
+
+            static get properties() {
+                return {
+                    data: {
+                        type: Array,
+                        value() {
+                            return [];
+                        }
+                    },
+                    a: { //record_par_page
+                        type: Number,
+                        value() {
+                            return 5;
+                        }
+                    },
+                    b: { // data_count;
+                        type: Number,
+                        value() {
+                            return 0;
+                        }
+                    },
+                    c: { //num_of_pages
+                        type: Number,
+                        value() {
+                            return parseInt((this.b % this.a) < 1 ? (this.b / this.a) : (this.b / this.a) + 1);
+                        }
+                    },
+                    d: { // num_of_page_to_show;
+                        type: Number,
+                        value() {
+                            return 5;
+                        }
+                    },
+                    e: { //end_page_index
+                        type: Number,
+                        value() {
+                            return parseInt(this.f + (this.d - 1));
+
+                        }
+                    },
+                    f: { // start_page_index;
+                        type: Number,
+                        value() {
+                            return 1;
+                        }
+                    },
+                    g: { // start_page_index;
+                        type: Number,
+                        value() {
+                            return 1;
+                        }
+                    },
+                    rowElementTagName: {
+                        type: String,
+                        value() {
+                            return null;
+                        }
+                    }
+                };
+            }
+
+            onPreviousClick(e) {
+                var pages = getPreviousPaginationInfo();
+                clearPaging();
+                generatePaging(pages.start_page_index, pages.end_page_index);
+                1 == pages.start_page_index ? enablePreviousButton(false) : enablePreviousButton(true);
+            }
+
+            onNextClick(e) {
+                var pages = getNextPaginationInfo();
+                clearPaging();
+                generatePaging(pages.start_page_index, pages.end_page_index);
+                c == pages.end_page_index ? enableNextButton(false) : enableNextButton(true);
+
+            }
+
+            clearPaging() {
+                let paging = document.getElementById("pages");
+                paging.innerHTML = "";
+            }
+
+            getNextPaginationInfo() {
+
+                if ((this.c - this.e) > 0) { // if still having pages i.e; (c - e) > 0
+                    this.f = this.e + 1; // update start_page_index
+                    this.e = (this.f + (this.d - 1)) <= this.c ? this.f + (this.d - 1) : (this.f + (this.c - this.f));
+                }
+                return {
+                    "start_page_index": this.f,
+                    "end_page_index": this.e
+                };
+
+            }
+
+            getPreviousPaginationInfo() {
+                if ((this.f - this.d) > 0) { // if still have previous pages to go back (start_page_index- num_of_page_to_show) > 0
+                    this.f = this.f - this.d;
+                    this.e = this.f + (this.d - 1);
+                }
+                return {
+                    "start_page_index": this.f,
+                    "end_page_index": this.e
+                };
+            }
+
+
+            generatePaging(startPage, endPage) {
+                let pages = parseInt(c);
+                let paging_holder = document.getElementById("pages");
+                let btnPrevious = document.createElement("a");
+                let btnNext = document.createElement("a");
+
+                btnPrevious.id = "btnPrevious";
+                btnPrevious.innerHTML = "Previous";
+                btnPrevious.href = "#";
+                paging_holder.appendChild(btnPrevious);
+
+                btnPrevious.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    onPreviousClick(e.target.id);
+
+                });
+
+                for (let i = parseInt(startPage); i <= parseInt(endPage); i++) {
+                    let anchor = document.createElement("a");
+                    anchor.id = i;
+                    anchor.innerHTML = i;
+                    anchor.href = "#";
+                    paging_holder.appendChild(anchor);
+
+                    anchor.addEventListener("click", function(e) {
+                        e.preventDefault();
+                        onPageClick(e.target.id);
+                    })
+
+                }
+
+                btnNext.id = "btnNext";
+                btnNext.innerHTML = "Next";
+                btnNext.href = "#";
+                paging_holder.appendChild(btnNext);
+
+                btnNext.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    onNextClick(e.target.id);
+                }, );
+            }
+
+            init() {
+                if (this.rowElementTagName !== null) {
+                    let row = document.createElement(this.rowElementTagName);
+                    row.data = this.data;
+                    var body = this.shadowRoot.getElementById("grid-body");
+                    body.append(row);
+                } else {
+                    throw new Error("rowElementTagName property is null");
+                }
+                /*To DO*/
+                this.pages = this.getPagingLabels(this.total_data_count);
+
+            }
+
+            onTemplateResponse(reponse) {
+                let htmlTemplate = response.detail.response;
+            }
+        }
+        customElements.define(GlassGrid.is, GlassGrid);
+    </script>
+</dom-module>
