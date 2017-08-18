@@ -1,0 +1,6 @@
+.infinite-scroll {
+    width: 80%;
+    height: 100%;
+    overflow: auto;
+    /* Optional, only to check that it works with margin/padding */
+}

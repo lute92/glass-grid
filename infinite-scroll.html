@@ -1,0 +1,53 @@
+<html>
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <style>
+        #placeholder {
+            /* We need to limit the height and show a scrollbar */
+            width: 800px;
+            height: 500px;
+            overflow: auto;
+            /* Optional, only to check that it works with margin/padding */
+            margin: 30px;
+            padding: 20px;
+            border: 10px solid black;
+        }
+        
+        .row {
+            width: 800px;
+            height: 200px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="placeholder">
+
+    </div>
+    <script>
+        window.onload = function() {
+            var placeHolder = document.getElementById("placeholder");
+
+            var nextItem = 1;
+            var loadMore = function() {
+                for (var i = 0; i < 20; i++) {
+                    var item = document.createElement('div');
+                    item.className = "row";
+                    item.innerText = 'Item ' + nextItem++;
+                    placeHolder.appendChild(item);
+                }
+            }
+
+            placeHolder.addEventListener('scroll', function() {
+                if (placeHolder.scrollTop + placeHolder.clientHeight >= placeHolder.scrollHeight) {
+                    loadMore();
+                }
+            })
+
+            loadMore();
+        }
+    </script>
+</body>
+
+</html>

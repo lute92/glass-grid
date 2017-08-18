@@ -1,11 +1,9 @@
 <html>
-
 <head>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="glass-grid-pure.js"></script>
     <link rel="stylesheet" href="src/css/myRow-Style.css" />
     <link rel="stylesheet" href="src/css/glass-grid.css" />
-
     <style>
         .paging-button {
             font-size: 20px;
@@ -17,7 +15,6 @@
         }
     </style>
 </head>
-
 <body>
     <div>
         <div id="myGrid">
@@ -42,7 +39,6 @@
                 });
 
             }
-
             function getPersons(pn, ps) {
                 return new Promise((resolve, reject) => {
                     const _url = "http://localhost:4000/api/person/" + pn + "/" + ps;
@@ -60,36 +56,15 @@
 
             }
 
-            function getPersonCount() {
-                return new Promise((resolve, reject) => {
-                    const _url = "http://localhost:4000/api/personCount"
-                    $.ajax({
-                        type: 'GET',
-                        url: _url,
-                        success: function(result) {
-                            resolve(result);
-                        },
-                        error: function(error) {
-                            reject(error);
-                        }
-                    });
-                })
-            }
-
-            var myCustomGrid = document.querySelector("#myGrid");
             let myGrid = new GlassGrid();
-            myGrid.pageSize = 3; // rec_par_page
-            myGrid.numberOfVisiblePagination = 5; // num_of_pagination_shown
             myGrid.id = "myGrid";
+            myGrid.infiniteScroll = true;
             myGrid.rowTemplateUrl = "src/my_row_template.html";
-            myGrid.pagination = true;
 
             Promise.all([
-                getPersonCount(),
-                getPersons(1, myGrid.pageSize)
+                getPersons(1, 10)
             ]).then((results) => {
-                myGrid.totalRecordCount = results[0].count;
-                myGrid.data = results[1];
+                myGrid.data = results[0];
                 myGrid.init();
 
             }).catch((error) => {
@@ -102,15 +77,19 @@
 
             function bindRowData() {
                 let data = myGrid.data;
+                let nextPageIndex = parseInt(myGrid.lastPage * myGrid.pageSize) - parseInt(myGrid.pageSize);
+
                 data.forEach((value, index) => {
-                    document.getElementsByName("txtName")[index].innerHTML = data[index]["name"];
-                    document.getElementsByName("txtAge")[index].innerHTML = data[index]["age"];
-                    document.getElementsByName("txtAddress")[index].innerHTML = data[index]["address"];
-                    document.getElementsByName("txtisMarried")[index].innerHTML = data[index]["isMarried"];
-                    document.getElementsByName("btnDetail")[index].addEventListener("click", (e) => {
+                    document.getElementsByName("txtId")[nextPageIndex].innerHTML = nextPageIndex + 1;
+                    document.getElementsByName("txtName")[nextPageIndex].innerHTML = data[index]["name"];
+                    document.getElementsByName("txtAge")[nextPageIndex].innerHTML = data[index]["age"];
+                    document.getElementsByName("txtAddress")[nextPageIndex].innerHTML = data[index]["address"];
+                    document.getElementsByName("txtisMarried")[nextPageIndex].innerHTML = data[index]["isMarried"];
+                    document.getElementsByName("btnDetail")[nextPageIndex].addEventListener("click", (e) => {
                         alert("Name: " + data[index]["name"]);
                     });
-                })
+                    nextPageIndex += 1;
+                });
             }
             myGrid.onPageChange(function() {
                 return new Promise((resolve, reject) => {
@@ -125,5 +104,4 @@
         })
     </script>
 </body>
-
 </html>

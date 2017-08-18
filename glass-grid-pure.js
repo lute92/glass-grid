@@ -1,58 +1,141 @@
 class GlassGrid {
-
     constructor() {
-
         this.data = [];
         this.id = "";
-        this.a = 3; //record_par_page
-        this.b = 0; // data_count;
-        this.c; // //num_of_pages
-        this.d = 5; // num_of_page_to_show
-        this.e = 1; //end_page_index
-        this.f = 1; //start_page_index
-        this.clickedPage = 1; //last_clicked_page_index;
         this.rowTemplateUrl = "/";
         this.rowTemplate = "";
+        this.enableSearch = false;
+        this.pageSize = 10; //record_par_page
+        this.totalRecordCount = 0; // data_count;
+        this.totalPages; // //num_of_pages
+        this.numberOfVisiblePagination = 5; // num_of_page_to_show
+        this.endPageIndex = 1; //end_page_index
+        this.startPageIndex = 1; //start_page_index
+        this._infiniteScroll = true;
+        this._pagination = false;
+        this.lastPage = 1;
     };
 
+    /**Library Events */
+    onPreviousClick() {
+        var pages = this.getPreviousPaginationInfo();
+        this.clearPaging();
+        this.generatePaging(pages.start_page_index, pages.end_page_index);
+        1 == pages.start_page_index ? this.enablePreviousButton(false) : this.enablePreviousButton(true);
+    }
+
+    onNextClick() {
+        var pages = this.getNextPaginationInfo();
+        this.clearPaging();
+        this.generatePaging(pages.start_page_index, pages.end_page_index);
+        this.totalPages == pages.end_page_index ? this.enableNextButton(false) : this.enableNextButton(true);
+
+    }
+    onPageScroll() {
+        let _this = this;
+        this.lastPage += 1;
+
+        _this.onPageChangeCallback().then((data) => {
+            _this.data = data;
+            return Promise.resolve(_this.appendRowTemplate());
+        }).then(() => {
+            _this.onRowDataBindCallback();
+        })
+    }
+
+    onPageClick(lastPage) {
+        let _this = this;
+        this.lastPage = parseInt(lastPage);
+
+        _this.onPageChangeCallback().then((data) => {
+            _this.data = data;
+            return Promise.resolve(_this.clearGridBody());
+        }).then(() => {
+            return Promise.resolve(_this.appendRowTemplate());
+        }).then(() => {
+            _this.onRowDataBindCallback();
+        })
+
+    }
+
+    /**Events Callbacks*/
+
+    onSearchSubmitCallback() {}
+    onPageChangeCallback() {}
+    onRowDataBindCallback() {}
+
+    /**User Events */
+
+    onSearchSubmit(callback) {
+        onSearchSubmitCallback = callback;
+    }
+
+    onPageChange(callback) {
+        this.onPageChangeCallback = callback;
+    }
+
+    onRowDataBind(callback) {
+        this.onRowDataBindCallback = callback;
+    }
+
     /**properties */
-    get c() {
-        return parseInt((this.b % this.a) == 0 ? (this.b / this.a) : (this.b / this.a) + 1);
+    get infiniteScroll() {
+        return this._infiniteScroll;
     }
 
-    set c(value) {
-        this.c = value;
+    set infiniteScroll(value) {
+        this._infiniteScroll = value;
+    }
+
+    get pagination() {
+        return this._pagination;
+    }
+
+    set pagination(value) {
+        if (typeof(value) !== 'boolean') throw new TypeError("Expected Boolean value but passed: " + typeof(value));
+
+        this._pagination = value;
+        this.infiniteScroll = !value;
+
+    }
+
+    get totalPages() {
+        return parseInt((this.totalRecordCount % this.pageSize) == 0 ? (this.totalRecordCount / this.pageSize) : (this.totalRecordCount / this.pageSize) + 1);
+    }
+
+    set totalPages(value) {
+        this.totalPages = value;
     }
 
 
-    /**Grid paging */
+    /**Grid paging functions */
 
     getNextPaginationInfo() {
 
-        if ((this.c - this.e) > 0) { // if still having pages i.e; (c - e) > 0
-            this.f = this.e + 1; // update start_page_index
-            this.e = (this.f + (this.d - 1)) <= this.c ? this.f + (this.d - 1) : (this.f + (this.c - this.f));
+        if ((this.totalPages - this.endPageIndex) > 0) { // if still having pages i.e; (c - e) > 0
+            this.startPageIndex = this.endPageIndex + 1; // update start_page_index
+            this.endPageIndex = (this.startPageIndex + (this.numberOfVisiblePagination - 1)) <= this.totalPages ? this.startPageIndex + (this.numberOfVisiblePagination - 1) : (this.startPageIndex + (this.totalPages - this.startPageIndex));
         }
         return {
-            "start_page_index": this.f,
-            "end_page_index": this.e
+            "start_page_index": this.startPageIndex,
+            "end_page_index": this.endPageIndex
         };
 
     }
 
     getPreviousPaginationInfo() {
-        if ((this.f - this.d) > 0) { // if still have previous pages to go back (start_page_index- num_of_page_to_show) > 0
-            this.f = this.f - this.d;
-            this.e = this.f + (this.d - 1);
+        if ((this.startPageIndex - this.numberOfVisiblePagination) > 0) { // if still have previous pages to go back (start_page_index- num_of_page_to_show) > 0
+            this.startPageIndex = this.startPageIndex - this.numberOfVisiblePagination;
+            this.endPageIndex = this.startPageIndex + (this.numberOfVisiblePagination - 1);
         }
         return {
-            "start_page_index": this.f,
-            "end_page_index": this.e
+            "start_page_index": this.startPageIndex,
+            "end_page_index": this.endPageIndex
         };
     }
 
     generatePaging(startPage, endPage) {
-        //let pages = parseInt(this.c);
+        //let pages = parseInt(this.totalPages);
         let container = document.getElementById(this.id);
         let paging_holder = container.getElementsByClassName("grid-footer")[0].getElementsByClassName("grid-paging")[0];
 
@@ -97,39 +180,6 @@ class GlassGrid {
             _this.onNextClick(e.target.id);
         });
     }
-    onPageChangeCallback() {}
-
-    onPageChange(callback) {
-        this.onPageChangeCallback = callback;
-    }
-
-    appendRowTemplate() {
-        let gridBody = document.getElementsByClassName("grid-body")[0];
-        gridBody.innerHTML = "";
-        this.data.forEach((value, index) => {
-            gridBody.innerHTML += this.rowTemplate;
-        });
-
-    }
-
-    onRowDataBindCallback() {}
-
-    onRowDataBind(callback) {
-        this.onRowDataBindCallback = callback;
-    }
-
-    onPageClick(clickedPage) {
-        this.clickedPage = parseInt(clickedPage);
-        this.onPageChangeCallback().then((data) => {
-                this.data = data;
-                return Promise.resolve(this.clearGridBody());
-            }).then(() => {
-                return Promise.resolve(this.appendRowTemplate());
-            })
-            .then(() => {
-                this.onRowDataBindCallback();
-            })
-    }
 
     enablePreviousButton(hasPrevious) {
         if (hasPrevious) {
@@ -147,18 +197,12 @@ class GlassGrid {
         }
     }
 
-    onPreviousClick() {
-        var pages = this.getPreviousPaginationInfo();
-        this.clearPaging();
-        this.generatePaging(pages.start_page_index, pages.end_page_index);
-        1 == pages.start_page_index ? this.enablePreviousButton(false) : this.enablePreviousButton(true);
-    }
-
-    onNextClick() {
-        var pages = this.getNextPaginationInfo();
-        this.clearPaging();
-        this.generatePaging(pages.start_page_index, pages.end_page_index);
-        this.c == pages.end_page_index ? this.enableNextButton(false) : this.enableNextButton(true);
+    appendRowTemplate() {
+        let grid = document.getElementById(this.id);
+        let gridBody = grid.getElementsByClassName("grid-body")[0];
+        this.data.forEach((value, index) => {
+            gridBody.innerHTML += this.rowTemplate;
+        });
 
     }
 
@@ -169,20 +213,39 @@ class GlassGrid {
     }
 
 
-    /**Grid Main */
+    /**Library Main Functions */
+
     init() {
         try {
             this.createGridShell();
-
-            if (this.c < this.d) { //available page count is less then page_count_to_shown
-                this.e = this.d - parseInt(this.c - this.d);
-            } else {
-                this.e = this.d;
+            if (this.pagination && this.infiniteScroll) {
+                throw new Error("Only one of the (pagination and infiniteScroll) options can be set to 'true'.");
+                return;
             }
+            if (this.pagination) {
+                if (this.totalPages < this.numberOfVisiblePagination) { //available page count is less then page_count_to_shown
+                    this.endPageIndex = this.numberOfVisiblePagination - parseInt(this.totalPages - this.numberOfVisiblePagination);
+                } else {
+                    this.endPageIndex = this.numberOfVisiblePagination;
+                }
 
-            this.generatePaging(this.f, this.e);
-            this.enablePreviousButton(false);
-            this.e < this.c ? this.enableNextButton(true) : this.enableNextButton(false);
+                this.generatePaging(this.startPageIndex, this.endPageIndex);
+                this.enablePreviousButton(false);
+                this.endPageIndex < this.totalPages ? this.enableNextButton(true) : this.enableNextButton(false);
+
+            } else if (this.infiniteScroll) {
+                let _this = this;
+                let grid = document.getElementById(this.id);
+                let gridBody = grid.getElementsByClassName("grid-body")[0];
+                gridBody.classList.add("infinite-scroll");
+                gridBody.addEventListener('scroll', function() {
+                    if (gridBody.scrollTop + gridBody.clientHeight >= gridBody.scrollHeight) {
+                        _this.onPageScroll();
+                    }
+                })
+
+
+            }
 
             this.getRowTemplate().then((rowTemplate) => {
                 this.rowTemplate = rowTemplate;
@@ -231,9 +294,12 @@ class GlassGrid {
             footerArea.className = "grid-footer";
             container.appendChild(footerArea);
 
-            let pagingArea = document.createElement("div");
-            pagingArea.className = "grid-paging";
-            footerArea.appendChild(pagingArea);
+            if (this.pagination) {
+                let pagingArea = document.createElement("div");
+                pagingArea.className = "grid-paging";
+                footerArea.appendChild(pagingArea);
+            }
+
         }
     }
 
@@ -256,10 +322,11 @@ class GlassGrid {
 
     }
 
-
     clearGridBody() {
         let gridBody = document.getElementsByClassName("grid-body")[0];
         gridBody.innerHTML = "";
     }
+
+
 
 }
